@@ -6,11 +6,13 @@ import com.example.bookstorebackend.repository.BookRepository;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.validation.constraints.Min;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -18,16 +20,25 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path("/books")
 public class BookEndPoint {
 
-    public Book getBook(Long id) {
+    @GET
+    @Path("/{id: \\d+}")
+    public Book getBook(@PathParam("id") @Min(1) Long id) {
         return bookRepository.find(id);
     }
 
-    public Book createBook(Book book) {
-        return bookRepository.create(book);
+    @POST
+    @Consumes(APPLICATION_JSON)
+    public Response createBook(Book book, @Context UriInfo uriInfo) {
+        book = bookRepository.create(book);
+        URI createdUri = uriInfo.getBaseUriBuilder().path(book.getId().toString()).build();
+        return Response.created(createdUri).build();
     }
 
-    public void deleteBook(Long id) {
+    @DELETE
+    @Path("/{id: \\d+}")
+    public Response deleteBook(@PathParam("id") @Min(1) Long id) {
         bookRepository.delete(id);
+        return Response.noContent().build();
     }
 
     @GET
